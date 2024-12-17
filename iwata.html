@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wake Lock + 自動ディマー解除</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000; /* 背景色を黒に */
+      color: #fff;
+      transition: filter 1s ease; /* ディマーのスムーズな遷移 */
+    }
+
+    /* ディマー状態のスタイル */
+    .dimmer {
+      filter: brightness(0.3); /* 画面を暗くする */
+    }
+  </style>
+</head>
+<body>
+  <p>☆</p>
+<iframe src="http://private.entech.co.jp/work-management/" width="100%" height="100%"></iframe>
+
+
+  <script>
+    let wakeLock = null;       // Wake Lockオブジェクト
+    let dimmerTimeout;         // ディマー状態タイマー
+
+    // Wake Lockをリクエストする
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Wake Lockが有効になりました。');
+          wakeLock.addEventListener('release', () => {
+            console.log('Wake Lockが解除されました。');
+          });
+        } else {
+          console.log('Wake Lock APIはこのブラウザでサポートされていません。');
+        }
+      } catch (err) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    }
+
+    // ディマー状態を有効にする
+    function enterDimmerState() {
+      document.body.classList.add('dimmer');
+      console.log('ディマー状態になりました。');
+    }
+
+    // ディマー状態を解除する
+    function exitDimmerState() {
+      document.body.classList.remove('dimmer');
+      console.log('ディマー状態が解除されました。');
+    }
+
+    // 操作の検知とタイマーのリセット
+    function resetDimmerTimer() {
+      clearTimeout(dimmerTimeout); // 既存のタイマーをクリア
+      exitDimmerState(); // ディマー状態を解除
+
+      // 一定時間（20秒）後にディマー状態に移行
+      dimmerTimeout = setTimeout(() => {
+        enterDimmerState();
+      }, 20000); // 1000ms = 1秒
+    }
+
+    // イベントリスナーを追加（操作の検知）
+    window.addEventListener('mousemove', resetDimmerTimer);
+    window.addEventListener('keydown', resetDimmerTimer);
+    window.addEventListener('click', resetDimmerTimer);
+    window.addEventListener('touchstart', resetDimmerTimer); // タッチ操作用
+
+    // ページ読み込み時にWake Lockをリクエストし、タイマーを開始
+    window.onload = () => {
+      requestWakeLock();
+      resetDimmerTimer(); // 初回タイマー設定
+    };
+  </script>
+</body>
+</html>
